@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning].
 
 ## [Unreleased]
 
+### Added
+
+- Add `on_missing_serializer` configuration option to control behavior when serializer/resource classes are not found. ([@skryukov])
+  Options: `:ignore` (default), `:log`, `:raise`, or a custom callable (proc/lambda)
+
+### Fixed
+
+- Namespaced controller serializers discovery (`Foo::BarController#baz` => `Foo::BarBazResource`/`Foo::BarBazSerializer`). ([@skryukov])
+
 ## [0.1.0] - 2025-11-04
+
+### Added
 
 - Initial release ([@skryukov])
 
