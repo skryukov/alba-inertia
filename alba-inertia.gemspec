@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Seamless integration between Alba and Inertia Rails."
   spec.description = "Seamless integration between Alba and Inertia Rails."
-  spec.homepage = "https://github.com/skryukov/typelizer"
+  spec.homepage = "https://github.com/skryukov/alba-inertia"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
