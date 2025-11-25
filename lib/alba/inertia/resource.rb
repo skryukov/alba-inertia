@@ -61,6 +61,7 @@ module Alba
             optional: kwargs.delete(:optional) || false,
             defer: kwargs.delete(:defer) || false,
             merge: kwargs.delete(:merge) || false,
+            scroll: kwargs.delete(:scroll) || false,
             always: kwargs.delete(:always) || false
           }.select { |_k, v| v.present? }
 
@@ -107,9 +108,7 @@ module Alba
         def auto_typelize_from_inertia(name, inertia_opts)
           return unless respond_to?(:typelize)
 
-          should_be_optional = inertia_opts[:optional].present? ||
-            inertia_opts[:defer].present? ||
-            inertia_opts[:merge].present?
+          should_be_optional = inertia_opts[:optional].present? || inertia_opts[:defer].present?
 
           typelize(name.to_sym => [optional: true]) if should_be_optional
         end
@@ -127,7 +126,7 @@ module Alba
           evaluation_block = build_evaluation_block(attr_name, attr_body)
 
           result[attr_name_str] = if metadata.key?(attr_name)
-            PropBuilder.build(evaluation_block, metadata[attr_name])
+            PropBuilder.build(evaluation_block, metadata[attr_name], object)
           else
             Alba::Inertia.config.lazy_by_default ? evaluation_block : evaluation_block.call
           end

@@ -14,6 +14,8 @@ RSpec.describe Alba::Inertia::Resource do
     end
   end
 
+  let(:valid_page_meta) { {page_name: "page", current_page: 5, previous_page: 4, next_page: nil} }
+
   describe ".inertia_prop" do
     it "marks existing attribute for wrapping" do
       test_resource_class.attributes :name
@@ -92,6 +94,16 @@ RSpec.describe Alba::Inertia::Resource do
       result = resource.to_inertia
 
       expect(result["important"]).to be_a(InertiaRails::AlwaysProp)
+    end
+
+    it "wraps scroll props with auto-detection" do
+      test_resource_class.attributes :items
+      test_resource_class.inertia_prop :items, scroll: true
+
+      resource = test_resource_class.new({items: [1, 2, 3], scroll_meta: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
     end
 
     it "wraps attributes differently based on metadata" do
@@ -230,6 +242,95 @@ RSpec.describe Alba::Inertia::Resource do
       expect(result["data"]).to be_a(InertiaRails::OptionalProp)
       expect(test_resource_class.inertia_metadata[:data]).to eq(optional: true, defer: true)
     end
+
+    it "supports scroll in symbol format" do
+      test_resource_class.attribute :items, inertia: :scroll do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3], scroll_meta: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["items"].metadata.as_json }.not_to raise_error
+      expect(test_resource_class.inertia_metadata[:items]).to eq(scroll: true)
+    end
+
+    it "supports scroll with metadata and page options" do
+      test_resource_class.attribute :items, inertia: {
+        scroll: valid_page_meta
+      } do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3]})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["items"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports scroll with symbol metadata extractor" do
+      test_resource_class.attribute :posts, inertia: {scroll: :pagination} do |obj|
+        obj[:posts]
+      end
+
+      resource = test_resource_class.new({posts: [{id: 1}], pagination: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["posts"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["posts"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports scroll with symbol metadata extractor in hash format" do
+      test_resource_class.attribute :items, inertia: {scroll: {scroll: :meta, wrapper: "div"}} do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3], meta: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["items"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports scroll with proc metadata extractor" do
+      test_resource_class.attribute :posts, inertia: {scroll: ->(obj) { obj[:pagination] }} do |obj|
+        obj[:posts]
+      end
+
+      resource = test_resource_class.new({posts: [{id: 1}], pagination: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["posts"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["posts"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports scroll with proc metadata extractor in hash format" do
+      test_resource_class.attribute :items, inertia: {scroll: {scroll: ->(obj) { obj[:meta] }, wrapper: "ul"}} do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3], meta: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["items"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports scroll with proc that accesses object methods" do
+      object_class = Struct.new(:items, :pagination_info)
+      test_resource_class.attribute :items, inertia: {scroll: ->(obj) { obj.pagination_info }} do |obj|
+        obj.items
+      end
+
+      obj = object_class.new([1, 2, 3], valid_page_meta)
+      resource = test_resource_class.new(obj)
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["items"].metadata.as_json }.not_to raise_error
+    end
   end
 
   describe "inertia: option on association" do
@@ -266,6 +367,132 @@ RSpec.describe Alba::Inertia::Resource do
       result = resource.to_inertia
 
       expect(result["products"]).to be_a(InertiaRails::OptionalProp)
+    end
+
+    it "supports scroll on has_many association" do
+      test_resource_class.has_many :posts, serializer: nested_resource_class, inertia: :scroll
+
+      resource = test_resource_class.new({posts: [{id: 1, name: "Post 1"}], scroll_meta: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["posts"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["posts"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports scroll with symbol metadata on association" do
+      test_resource_class.has_many :posts, serializer: nested_resource_class, inertia: {scroll: :pagination}
+
+      resource = test_resource_class.new({posts: [{id: 1, name: "Post 1"}], pagination: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["posts"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["posts"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports scroll with proc metadata on association" do
+      test_resource_class.has_many :items, serializer: nested_resource_class, inertia: {scroll: ->(obj) { obj[:meta] }}
+
+      resource = test_resource_class.new({items: [{id: 1, name: "Item 1"}], meta: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["items"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports scroll with symbol metadata and wrapper on association" do
+      test_resource_class.has_many :posts, serializer: nested_resource_class, inertia: {scroll: {scroll: :pagination, wrapper: "section"}}
+
+      resource = test_resource_class.new({posts: [{id: 1, name: "Post 1"}], pagination: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["posts"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["posts"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports scroll with proc metadata and wrapper on association" do
+      test_resource_class.has_many :items, serializer: nested_resource_class, inertia: {scroll: {scroll: ->(obj) { obj[:meta] }, wrapper: "div"}}
+
+      resource = test_resource_class.new({items: [{id: 1, name: "Item 1"}], meta: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["items"].metadata.as_json }.not_to raise_error
+    end
+  end
+
+  describe "auto-detection of pagination metadata with inertia: :scroll" do
+    it "auto-detects scroll_meta attribute" do
+      test_resource_class.attribute :items, inertia: :scroll do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3], scroll_meta: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["items"].metadata.as_json }.not_to raise_error
+    end
+
+    it "auto-detects pagy attribute when scroll_meta is not present" do
+      test_resource_class.attribute :items, inertia: :scroll do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3], pagy: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["items"].metadata.as_json }.not_to raise_error
+    end
+
+    it "prefers scroll_meta over pagy when both are present" do
+      test_resource_class.attribute :items, inertia: :scroll do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3], scroll_meta: valid_page_meta, pagy: {bad: "meta"}})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["items"].metadata.as_json }.not_to raise_error
+    end
+
+    it "raises error when no pagination metadata can be detected" do
+      test_resource_class.attribute :items, inertia: :scroll do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3]})
+
+      expect { resource.to_inertia }.to raise_error(ArgumentError, /Unable to auto-detect pagination metadata/)
+    end
+
+    it "works with attribute definition" do
+      test_resource_class.attribute :posts, inertia: :scroll do |obj|
+        obj[:posts]
+      end
+
+      resource = test_resource_class.new({posts: [{id: 1}], scroll_meta: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["posts"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["posts"].metadata.as_json }.not_to raise_error
+    end
+
+    it "works with has_many association" do
+      nested_resource_class = Class.new do
+        include Alba::Resource
+
+        attributes :id, :name
+      end
+
+      test_resource_class.has_many :posts, serializer: nested_resource_class, inertia: :scroll
+
+      resource = test_resource_class.new({posts: [{id: 1, name: "Post"}], scroll_meta: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["posts"]).to be_a(InertiaRails::ScrollProp)
+      expect { result["posts"].metadata.as_json }.not_to raise_error
     end
   end
 end
