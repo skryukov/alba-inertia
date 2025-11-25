@@ -27,7 +27,10 @@ Include `Alba::Inertia::Resource` in your resource classes:
 ```ruby
 class ApplicationResource
   include Alba::Resource
-  include Alba::Inertia::Resource
+  
+  # ...
+
+  helper Alba::Inertia::Resource
 end
 ```
 
@@ -61,6 +64,15 @@ class CoursesIndexResource < ApplicationResource
 
   # Merge prop (for partial reloads)
   has_many :comments, serializer: CommentResource, inertia: { merge: { match_on: :id } }
+
+  # Scroll prop with auto-detection.
+  # Checks object for `scroll_meta` and `pagy` attributes, or object being a Kaminari collection.
+  has_many :items, inertia: :scroll
+
+  # Scroll prop with explicit metadata
+  has_many :items, inertia: { scroll: :meta }
+  has_many :items, inertia: { scroll: -> { |obj| obj.meta } }
+  has_many :items, inertia: { scroll: -> { |obj| obj.meta }, wrapper: 'data' }
 end
 ```
 
