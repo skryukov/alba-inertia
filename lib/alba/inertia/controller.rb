@@ -9,11 +9,15 @@ module Alba
         Alba::Inertia.config.default_render ? render_inertia : super
       end
 
-      def render_inertia(component = nil, serializer: inertia_serializer_class, locals: view_assigns, **props)
-        resource = serializer&.new(locals.symbolize_keys!)
+      def render_inertia(component = nil, serializer: inertia_serializer_class, locals: view_assigns, serializer_params: {}, **props)
+        resource = serializer&.new(locals.symbolize_keys!, params: inertia_serializer_params.merge(serializer_params))
         data = resource.respond_to?(:to_inertia) ? resource.to_inertia : resource.as_json
 
         render inertia: component || true, props: data || {}, **props
+      end
+
+      def inertia_serializer_params
+        {}
       end
 
       def inertia_serializer_class

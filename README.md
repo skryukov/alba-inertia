@@ -189,6 +189,49 @@ render_inertia(serializer: CustomResource)
 render_inertia(locals: { custom: 'props'})
 ```
 
+### Serializer Params
+
+You can pass params to the serializer using the `serializer_params` option. This is useful for passing context like the current user, permissions, or feature flags:
+
+```ruby
+class CoursesController < InertiaController
+  def index
+    @courses = Course.all
+    render_inertia(serializer_params: { current_user: current_user })
+  end
+end
+```
+
+In your resource, access params via the `params` method:
+
+```ruby
+class CoursesIndexResource < ApplicationResource
+  attributes :id, :title
+
+  attribute :can_edit do |course|
+    params[:current_user]&.can_edit?(course)
+  end
+end
+```
+
+### Default Serializer Params
+
+Override `inertia_serializer_params` in your controller to provide default params for all Inertia renders:
+
+```ruby
+class ApplicationController < ActionController::Base
+  include Alba::Inertia::Controller
+
+  private
+
+  def inertia_serializer_params
+    { current_user: current_user, locale: I18n.locale }
+  end
+end
+```
+
+The `serializer_params` option in `render_inertia` will be merged with these defaults (with `serializer_params` taking precedence).
+
 ## Naming Convention
 
 The controller integration follows Rails conventions:

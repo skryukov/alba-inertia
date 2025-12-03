@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning].
 ### Added
 
 - Support for `InertiaRails.scroll` attributes. ([@skryukov])
+- Add `serializer_params` option to `render_inertia` and `inertia_serializer_params` controller method for passing params to serializers. ([@skryukov])
 
 ## [0.1.1] - 2025-11-05
 
