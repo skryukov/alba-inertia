@@ -13,8 +13,7 @@ jobs:
     name: Ruby ${{ matrix.ruby }}
     strategy:
       matrix:
-        ruby:
-          - '3.4.7'
+        ruby: ['3.2', '3.3', '3.4']
 
     steps:
       - uses: actions/checkout@v5
