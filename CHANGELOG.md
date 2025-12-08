@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning].
 
 ## [Unreleased]
 
+## [0.1.2] - 2025-12-08
+
 ### Added
 
 - Support for `InertiaRails.scroll` attributes. ([@skryukov])
@@ -31,7 +33,8 @@ and this project adheres to [Semantic Versioning].
 
 [@skryukov]: https://github.com/skryukov
 
-[Unreleased]: https://github.com/skryukov/alba-inertia/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/skryukov/alba-inertia/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/skryukov/alba-inertia/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/skryukov/alba-inertia/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/skryukov/alba-inertia/commits/v0.1.0
 
