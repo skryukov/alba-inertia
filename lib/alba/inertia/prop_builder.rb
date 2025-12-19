@@ -3,10 +3,14 @@
 module Alba
   module Inertia
     class PropBuilder
+      ONCE_KEYS = %i[once key expires_in fresh]
+
       class << self
         def build(evaluation_block, options, object = nil)
           if options[:optional]
             wrap_optional(evaluation_block, options[:optional], object)
+          elsif options[:once]
+            wrap_once(evaluation_block, options[:once], object)
           elsif options[:defer]
             wrap_defer(evaluation_block, options[:defer], object)
           elsif options[:merge]
@@ -26,18 +30,27 @@ module Alba
           ::InertiaRails.always(&value_block)
         end
 
-        def wrap_optional(value_block, _opts, _object)
-          ::InertiaRails.optional(&value_block)
+        def wrap_optional(value_block, opts, _object)
+          if opts.is_a?(Hash)
+            options = opts.slice(*ONCE_KEYS)
+            ::InertiaRails.optional(**options, &value_block)
+          else
+            ::InertiaRails.optional(&value_block)
+          end
+        end
+
+        def wrap_once(value_block, opts, _object)
+          if opts.is_a?(Hash)
+            options = opts.slice(*ONCE_KEYS)
+            ::InertiaRails.once(**options, &value_block)
+          else
+            ::InertiaRails.once(&value_block)
+          end
         end
 
         def wrap_defer(value_block, opts, _object)
           if opts.is_a?(Hash)
-            options = {
-              group: opts[:group],
-              merge: opts[:merge],
-              deep_merge: opts[:deep_merge],
-              match_on: opts[:match_on]
-            }.compact
+            options = opts.slice(:group, :deep_merge, :merge, :match_on, *ONCE_KEYS)
 
             ::InertiaRails.defer(**options, &value_block)
           else
@@ -47,7 +60,7 @@ module Alba
 
         def wrap_merge(value_block, opts, _object)
           if opts.is_a?(Hash)
-            options = {match_on: opts[:match_on]}.compact
+            options = opts.slice(:match_on, *ONCE_KEYS)
             ::InertiaRails.merge(**options, &value_block)
           else
             ::InertiaRails.merge(&value_block)
