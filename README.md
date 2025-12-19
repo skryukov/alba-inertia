@@ -1,5 +1,7 @@
 # Alba::Inertia
 
+[![Gem Version](https://badge.fury.io/rb/alba-inertia.svg)](https://rubygems.org/gems/alba-inertia)
+
 Seamless integration between [Alba](https://github.com/okuramasafumi/alba) serializers and [Inertia Rails](https://inertia-rails.dev/).
 
 ## Features
@@ -7,6 +9,10 @@ Seamless integration between [Alba](https://github.com/okuramasafumi/alba) seria
 - Support for all Inertia prop types: optional, deferred, and merge props
 - Lazy evaluation for efficient data loading on partial reloads
 - Auto-detection of resource classes based on controller/action naming
+
+<a href="https://evilmartians.com/?utm_source=alba-inertia&utm_campaign=project_page">
+<img src="https://evilmartians.com/badges/sponsored-by-evil-martians.svg" alt="Built by Evil Martians" width="236" height="54">
+</a>
 
 ## Installation
 
