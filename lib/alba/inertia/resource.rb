@@ -59,6 +59,7 @@ module Alba
         def inertia_prop(name, **kwargs)
           options = {
             optional: kwargs.delete(:optional) || false,
+            once: kwargs.delete(:once) || false,
             defer: kwargs.delete(:defer) || false,
             merge: kwargs.delete(:merge) || false,
             scroll: kwargs.delete(:scroll) || false,

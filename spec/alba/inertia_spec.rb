@@ -96,6 +96,26 @@ RSpec.describe Alba::Inertia::Resource do
       expect(result["important"]).to be_a(InertiaRails::AlwaysProp)
     end
 
+    it "wraps once props", skip: !defined?(InertiaRails::OnceProp) && "OnceProp not available in this version of inertia_rails" do
+      test_resource_class.attributes :plans
+      test_resource_class.inertia_prop :plans, once: true
+
+      resource = test_resource_class.new({plans: ["basic", "premium"]})
+      result = resource.to_inertia
+
+      expect(result["plans"]).to be_a(InertiaRails::OnceProp)
+    end
+
+    it "wraps once props with options", skip: !defined?(InertiaRails::OnceProp) && "OnceProp not available in this version of inertia_rails" do
+      test_resource_class.attributes :plans
+      test_resource_class.inertia_prop :plans, once: {key: "active_plans", expires_in: 3600}
+
+      resource = test_resource_class.new({plans: ["basic", "premium"]})
+      result = resource.to_inertia
+
+      expect(result["plans"]).to be_a(InertiaRails::OnceProp)
+    end
+
     it "wraps scroll props with auto-detection" do
       test_resource_class.attributes :items
       test_resource_class.inertia_prop :items, scroll: true
@@ -331,6 +351,41 @@ RSpec.describe Alba::Inertia::Resource do
       expect(result["items"]).to be_a(InertiaRails::ScrollProp)
       expect { result["items"].metadata.as_json }.not_to raise_error
     end
+
+    it "supports once in symbol format", skip: !defined?(InertiaRails::OnceProp) && "OnceProp not available in this version of inertia_rails" do
+      test_resource_class.attribute :plans, inertia: :once do |obj|
+        obj[:plans]
+      end
+
+      resource = test_resource_class.new({plans: ["basic", "premium"]})
+      result = resource.to_inertia
+
+      expect(result["plans"]).to be_a(InertiaRails::OnceProp)
+      expect(test_resource_class.inertia_metadata[:plans]).to eq(once: true)
+    end
+
+    it "supports once with hash options", skip: !defined?(InertiaRails::OnceProp) && "OnceProp not available in this version of inertia_rails" do
+      test_resource_class.attribute :plans, inertia: {once: {key: "active_plans", expires_in: 3600}} do |obj|
+        obj[:plans]
+      end
+
+      resource = test_resource_class.new({plans: ["basic", "premium"]})
+      result = resource.to_inertia
+
+      expect(result["plans"]).to be_a(InertiaRails::OnceProp)
+      expect(test_resource_class.inertia_metadata[:plans]).to eq(once: {key: "active_plans", expires_in: 3600})
+    end
+
+    it "supports once: true shorthand", skip: !defined?(InertiaRails::OnceProp) && "OnceProp not available in this version of inertia_rails" do
+      test_resource_class.attribute :plans, inertia: {once: true} do |obj|
+        obj[:plans]
+      end
+
+      resource = test_resource_class.new({plans: ["basic", "premium"]})
+      result = resource.to_inertia
+
+      expect(result["plans"]).to be_a(InertiaRails::OnceProp)
+    end
   end
 
   describe "inertia: option on association" do
@@ -417,6 +472,62 @@ RSpec.describe Alba::Inertia::Resource do
 
       expect(result["items"]).to be_a(InertiaRails::ScrollProp)
       expect { result["items"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports once on has_many", skip: !defined?(InertiaRails::OnceProp) && "OnceProp not available in this version of inertia_rails" do
+      test_resource_class.has_many :plans, serializer: nested_resource_class, inertia: :once
+
+      resource = test_resource_class.new({plans: [{id: 1, name: "Basic"}]})
+      result = resource.to_inertia
+
+      expect(result["plans"]).to be_a(InertiaRails::OnceProp)
+    end
+
+    it "supports once with options on has_one", skip: !defined?(InertiaRails::OnceProp) && "OnceProp not available in this version of inertia_rails" do
+      test_resource_class.has_one :subscription, serializer: nested_resource_class, inertia: {once: {key: "user_subscription"}}
+
+      resource = test_resource_class.new({subscription: {id: 1, name: "Premium"}})
+      result = resource.to_inertia
+
+      expect(result["subscription"]).to be_a(InertiaRails::OnceProp)
+    end
+  end
+
+  describe "once prop composability", skip: !defined?(InertiaRails::OnceProp) && "OnceProp not available in this version of inertia_rails" do
+    it "supports optional with once options", skip: !InertiaRails.method(:optional).parameters.any? { |type, _| type == :keyrest } && "InertiaRails.optional doesn't accept keyword arguments yet" do
+      test_resource_class.attribute :settings, inertia: {optional: {once: true, key: "user_settings"}} do |obj|
+        obj[:settings]
+      end
+
+      resource = test_resource_class.new({settings: {theme: "dark"}})
+      result = resource.to_inertia
+
+      expect(result["settings"]).to be_a(InertiaRails::OptionalProp)
+      expect(result["settings"].once?).to be true
+    end
+
+    it "supports defer with once options" do
+      test_resource_class.attribute :analytics, inertia: {defer: {group: "stats", once: true}} do |obj|
+        obj[:analytics]
+      end
+
+      resource = test_resource_class.new({analytics: {views: 100}})
+      result = resource.to_inertia
+
+      expect(result["analytics"]).to be_a(InertiaRails::DeferProp)
+      expect(result["analytics"].once?).to be true
+    end
+
+    it "supports merge with once options" do
+      test_resource_class.attribute :items, inertia: {merge: {match_on: :id, once: true}} do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [{id: 1}]})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::MergeProp)
+      expect(result["items"].once?).to be true
     end
   end
 

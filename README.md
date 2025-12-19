@@ -71,8 +71,12 @@ class CoursesIndexResource < ApplicationResource
 
   # Scroll prop with explicit metadata
   has_many :items, inertia: { scroll: :meta }
-  has_many :items, inertia: { scroll: -> { |obj| obj.meta } }
-  has_many :items, inertia: { scroll: -> { |obj| obj.meta }, wrapper: 'data' }
+  has_many :items, inertia: { scroll: ->(obj) { obj.meta } }
+  has_many :items, inertia: { scroll: ->(obj) { obj.meta }, wrapper: 'data' }
+
+  # Once prop
+  has_many :plans, inertia: :once
+  has_many :plans, inertia: { once: { key: 'active_plans', expires_in: 1.hour, fresh: ->(obj) { obj.fresh? } } }
 end
 ```
 
