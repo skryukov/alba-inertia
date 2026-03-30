@@ -122,7 +122,7 @@ module Alba
         result = {}
 
         self.class._attributes.each do |attr_name, attr_body|
-          attr_name_str = attr_name.to_s
+          attr_name_str = transform_key(attr_name)
 
           evaluation_block = build_evaluation_block(attr_name, attr_body)
 

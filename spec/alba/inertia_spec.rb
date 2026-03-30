@@ -531,6 +531,36 @@ RSpec.describe Alba::Inertia::Resource do
     end
   end
 
+  describe "transform_keys" do
+    around do |example|
+      Alba.inflector = :active_support
+      example.run
+      Alba.inflector = nil
+    end
+
+    it "transforms keys in to_inertia output" do
+      test_resource_class.transform_keys :lower_camel
+      test_resource_class.attributes :first_name, :last_name
+
+      resource = test_resource_class.new({first_name: "John", last_name: "Doe"})
+      result = resource.to_inertia
+
+      expect(result.keys).to contain_exactly("firstName", "lastName")
+    end
+
+    it "transforms keys for inertia_prop attributes" do
+      test_resource_class.transform_keys :lower_camel
+      test_resource_class.attributes :first_name
+      test_resource_class.inertia_prop :first_name, optional: true
+
+      resource = test_resource_class.new({first_name: "John"})
+      result = resource.to_inertia
+
+      expect(result.keys).to contain_exactly("firstName")
+      expect(result["firstName"]).to be_a(InertiaRails::OptionalProp)
+    end
+  end
+
   describe "auto-detection of pagination metadata with inertia: :scroll" do
     it "auto-detects scroll_meta attribute" do
       test_resource_class.attribute :items, inertia: :scroll do |obj|
