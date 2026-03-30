@@ -27,6 +27,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "alba"
-  spec.add_dependency "inertia_rails"
+  spec.add_dependency "inertia_rails", ">= 3.19.0"
   spec.add_dependency "zeitwerk"
 end

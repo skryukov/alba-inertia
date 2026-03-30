@@ -2,7 +2,8 @@
 
 require "active_support/all"
 require "alba"
-require "inertia_rails/inertia_rails"
+require "rails"
+require "inertia_rails"
 require "alba/inertia"
 
 RSpec.configure do |config|
