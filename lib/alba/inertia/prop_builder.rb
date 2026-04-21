@@ -19,6 +19,8 @@ module Alba
             wrap_merge(evaluation_block, options[:merge], object)
           elsif options[:always]
             wrap_always(evaluation_block, options[:always], object)
+          elsif options[:cache]
+            wrap_cache(evaluation_block, options[:cache], object)
           else
             Alba::Inertia.config.lazy_by_default ? evaluation_block : evaluation_block.call
           end
@@ -30,9 +32,18 @@ module Alba
           ::InertiaRails.always(&value_block)
         end
 
+        def wrap_cache(value_block, opts, _object)
+          if opts.is_a?(Hash)
+            raise ArgumentError, "cache: hash requires a :key" unless opts.key?(:key)
+            ::InertiaRails.cache(opts[:key], **opts.except(:key), &value_block)
+          else
+            ::InertiaRails.cache(opts, &value_block)
+          end
+        end
+
         def wrap_optional(value_block, opts, _object)
           if opts.is_a?(Hash)
-            options = opts.slice(*ONCE_KEYS)
+            options = opts.slice(:cache, *ONCE_KEYS)
             ::InertiaRails.optional(**options, &value_block)
           else
             ::InertiaRails.optional(&value_block)
@@ -50,7 +61,7 @@ module Alba
 
         def wrap_defer(value_block, opts, _object)
           if opts.is_a?(Hash)
-            options = opts.slice(:group, :deep_merge, :merge, :match_on, *ONCE_KEYS)
+            options = opts.slice(:group, :deep_merge, :merge, :match_on, :cache, *ONCE_KEYS)
 
             ::InertiaRails.defer(**options, &value_block)
           else

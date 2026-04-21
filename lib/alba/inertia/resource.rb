@@ -56,17 +56,7 @@ module Alba
         #
         # @example Merge with custom options
         #   inertia_prop :metadata, merge: { match_on: :id, prepend: 'meta_' }
-        def inertia_prop(name, **kwargs)
-          options = {
-            optional: kwargs.delete(:optional) || false,
-            once: kwargs.delete(:once) || false,
-            defer: kwargs.delete(:defer) || false,
-            merge: kwargs.delete(:merge) || false,
-            scroll: kwargs.delete(:scroll) || false,
-            always: kwargs.delete(:always) || false,
-            group: kwargs.delete(:group) || false
-          }.select { |_k, v| v.present? }
-
+        def inertia_prop(name, **options)
           inertia_metadata[name] = options.freeze
           auto_typelize_from_inertia(name, options)
         end
