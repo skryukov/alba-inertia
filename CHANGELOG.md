@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning].
 
 ## [Unreleased]
 
+### Added
+
+- Support for `InertiaRails.cache` props. ([@skryukov])
+- Support for deferred scroll props. ([@nickpellant])
+- Respect configured `transform_keys` on top-level prop keys. ([@bknoles])
+
+### Changed
+
+- Compatibility with InertiaRails 3.19.0+ load path. ([@bknoles])
+
 ## [0.1.3] - 2025-12-08
 
 ### Added
@@ -37,6 +47,8 @@ and this project adheres to [Semantic Versioning].
 
 - Initial release ([@skryukov])
 
+[@bknoles]: https://github.com/bknoles
+[@nickpellant]: https://github.com/nickpellant
 [@skryukov]: https://github.com/skryukov
 
 [Unreleased]: https://github.com/skryukov/alba-inertia/compare/v0.1.3...HEAD

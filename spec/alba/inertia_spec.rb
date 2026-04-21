@@ -126,6 +126,57 @@ RSpec.describe Alba::Inertia::Resource do
       expect(result["items"]).to be_a(InertiaRails::ScrollProp)
     end
 
+    it "wraps cache props with a string key", skip: !defined?(InertiaRails::CachedProp) && "CachedProp not available in this version of inertia_rails" do
+      test_resource_class.attributes :items
+      test_resource_class.inertia_prop :items, cache: "items_v1"
+
+      resource = test_resource_class.new({items: [1, 2, 3]})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::CachedProp)
+    end
+
+    it "wraps cache props with hash options", skip: !defined?(InertiaRails::CachedProp) && "CachedProp not available in this version of inertia_rails" do
+      test_resource_class.attributes :items
+      test_resource_class.inertia_prop :items, cache: {key: "items_v1", expires_in: 3600}
+
+      resource = test_resource_class.new({items: [1, 2, 3]})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::CachedProp)
+    end
+
+    it "raises when cache hash lacks a :key", skip: !defined?(InertiaRails::CachedProp) && "CachedProp not available in this version of inertia_rails" do
+      test_resource_class.attributes :items
+      test_resource_class.inertia_prop :items, cache: {expires_in: 3600}
+
+      resource = test_resource_class.new({items: [1, 2, 3]})
+
+      expect { resource.to_inertia }.to raise_error(ArgumentError, /cache: hash requires a :key/)
+    end
+
+    it "composes cache with optional", skip: !defined?(InertiaRails::CachedProp) && "CachedProp not available in this version of inertia_rails" do
+      test_resource_class.attributes :items
+      test_resource_class.inertia_prop :items, optional: {cache: "items_v1"}
+
+      resource = test_resource_class.new({items: [1, 2, 3]})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::OptionalProp)
+      expect(result["items"].cached?).to be true
+    end
+
+    it "composes cache with defer", skip: !defined?(InertiaRails::CachedProp) && "CachedProp not available in this version of inertia_rails" do
+      test_resource_class.attributes :items
+      test_resource_class.inertia_prop :items, defer: {cache: {key: "items_v1", expires_in: 3600}}
+
+      resource = test_resource_class.new({items: [1, 2, 3]})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::DeferProp)
+      expect(result["items"].cached?).to be true
+    end
+
     it "wraps attributes differently based on metadata" do
       test_resource_class.attributes :id, :name
       test_resource_class.inertia_prop :name, optional: true
