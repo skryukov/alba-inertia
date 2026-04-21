@@ -63,7 +63,8 @@ module Alba
             defer: kwargs.delete(:defer) || false,
             merge: kwargs.delete(:merge) || false,
             scroll: kwargs.delete(:scroll) || false,
-            always: kwargs.delete(:always) || false
+            always: kwargs.delete(:always) || false,
+            group: kwargs.delete(:group) || false
           }.select { |_k, v| v.present? }
 
           inertia_metadata[name] = options.freeze

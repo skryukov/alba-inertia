@@ -11,12 +11,12 @@ module Alba
             wrap_optional(evaluation_block, options[:optional], object)
           elsif options[:once]
             wrap_once(evaluation_block, options[:once], object)
+          elsif options[:scroll]
+            wrap_scroll(evaluation_block, options[:scroll], object, options)
           elsif options[:defer]
             wrap_defer(evaluation_block, options[:defer], object)
           elsif options[:merge]
             wrap_merge(evaluation_block, options[:merge], object)
-          elsif options[:scroll]
-            wrap_scroll(evaluation_block, options[:scroll], object)
           elsif options[:always]
             wrap_always(evaluation_block, options[:always], object)
           else
@@ -67,23 +67,25 @@ module Alba
           end
         end
 
-        def wrap_scroll(value_block, opts, object)
+        def wrap_scroll(value_block, opts, object, all_options = {})
+          extra = all_options.slice(:defer, :group)
+
           case opts
           when Symbol
             # scroll: :meta => extract metadata from object[:meta] or object.meta
             metadata = extract_from_object(object, opts)
-            ::InertiaRails.scroll(metadata: metadata, &value_block)
+            ::InertiaRails.scroll(metadata: metadata, **extra, &value_block)
           when Proc
             # scroll: -> { |obj| obj.meta } => call proc with object
             metadata = opts.call(object)
-            ::InertiaRails.scroll(metadata: metadata, &value_block)
+            ::InertiaRails.scroll(metadata: metadata, **extra, &value_block)
           when Hash
             options = build_scroll_options(opts, object)
             ::InertiaRails.scroll(**options, &value_block)
           when TrueClass
             # scroll: true => auto-detect metadata
             metadata = auto_detect_pagination_metadata(object)
-            ::InertiaRails.scroll(metadata: metadata, &value_block)
+            ::InertiaRails.scroll(metadata: metadata, **extra, &value_block)
           else
             raise ArgumentError, "Invalid scroll option. Expected Symbol, Proc, Hash, or true."
           end
@@ -99,7 +101,7 @@ module Alba
             opts[:scroll]
           end
 
-          {metadata: metadata}.merge(opts.slice(:wrapper, :page_name, :previous_page, :next_page, :current_page))
+          {metadata: metadata}.merge(opts.slice(:defer, :group, :wrapper, :page_name, :previous_page, :next_page, :current_page))
         end
 
         def extract_from_object(object, key)

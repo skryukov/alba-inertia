@@ -352,6 +352,70 @@ RSpec.describe Alba::Inertia::Resource do
       expect { result["items"].metadata.as_json }.not_to raise_error
     end
 
+    it "supports scroll with defer in flat format" do
+      test_resource_class.attribute :items, inertia: {scroll: :pagination, defer: true} do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3], pagination: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect(result["items"]).to be_deferred
+      expect { result["items"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports scroll with defer and group in flat format" do
+      test_resource_class.attribute :items, inertia: {scroll: :pagination, defer: true, group: "infinite"} do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3], pagination: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect(result["items"]).to be_deferred
+      expect(result["items"].group).to eq("infinite")
+    end
+
+    it "supports scroll with defer in nested hash format" do
+      test_resource_class.attribute :items, inertia: {scroll: {scroll: :pagination, defer: true}} do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3], pagination: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect(result["items"]).to be_deferred
+      expect { result["items"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports scroll with defer and group in nested hash format" do
+      test_resource_class.attribute :items, inertia: {scroll: {scroll: :pagination, defer: true, group: "stream"}} do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3], pagination: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect(result["items"]).to be_deferred
+      expect(result["items"].group).to eq("stream")
+    end
+
+    it "supports scroll with auto-detection and defer in flat format" do
+      test_resource_class.attribute :items, inertia: {scroll: true, defer: true} do |obj|
+        obj[:items]
+      end
+
+      resource = test_resource_class.new({items: [1, 2, 3], scroll_meta: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect(result["items"]).to be_deferred
+    end
+
     it "supports once in symbol format", skip: !defined?(InertiaRails::OnceProp) && "OnceProp not available in this version of inertia_rails" do
       test_resource_class.attribute :plans, inertia: :once do |obj|
         obj[:plans]
@@ -472,6 +536,27 @@ RSpec.describe Alba::Inertia::Resource do
 
       expect(result["items"]).to be_a(InertiaRails::ScrollProp)
       expect { result["items"].metadata.as_json }.not_to raise_error
+    end
+
+    it "supports scroll with defer on has_many association" do
+      test_resource_class.has_many :posts, serializer: nested_resource_class, inertia: {scroll: :pagination, defer: true}
+
+      resource = test_resource_class.new({posts: [{id: 1, name: "Post 1"}], pagination: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["posts"]).to be_a(InertiaRails::ScrollProp)
+      expect(result["posts"]).to be_deferred
+    end
+
+    it "supports scroll with defer and group in nested hash on association" do
+      test_resource_class.has_many :items, serializer: nested_resource_class, inertia: {scroll: {scroll: :meta, defer: true, group: "feed"}}
+
+      resource = test_resource_class.new({items: [{id: 1, name: "Item 1"}], meta: valid_page_meta})
+      result = resource.to_inertia
+
+      expect(result["items"]).to be_a(InertiaRails::ScrollProp)
+      expect(result["items"]).to be_deferred
+      expect(result["items"].group).to eq("feed")
     end
 
     it "supports once on has_many", skip: !defined?(InertiaRails::OnceProp) && "OnceProp not available in this version of inertia_rails" do
