@@ -10,9 +10,9 @@ Seamless integration between [Alba](https://github.com/okuramasafumi/alba) seria
 - Lazy evaluation for efficient data loading on partial reloads
 - Auto-detection of resource classes based on controller/action naming
 
-<a href="https://evilmartians.com/?utm_source=alba-inertia&utm_campaign=project_page">
-<img src="https://evilmartians.com/badges/sponsored-by-evil-martians.svg" alt="Built by Evil Martians" width="236" height="54">
-</a>
+<br/>
+
+<img src="https://cdn.evilmartians.com/badges/logo-no-label.svg" alt="Evil Martians logo" width="22" height="16" /> <b>Alba::Inertia</b> is built by <b><a href="https://evilmartians.com/">Evil Martians</a></b>, an American design and engineering consultancy for <b>developer tools, AI, and cybersecurity startups</b>.
 
 ## Installation
 
