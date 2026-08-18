@@ -3,6 +3,35 @@
 module Alba
   module Inertia
     module Controller
+      def self.included(base)
+        base.extend(ClassMethods)
+      end
+
+      module ClassMethods
+        # Overrides InertiaRails' `inertia_share` to support assigning instance
+        # variables inside the block instead of returning a hash.
+        #
+        # @example
+        #   inertia_share do
+        #     @user = current_user&.as_json(only: [:id, :name])
+        #     @total_users = -> { User.count }
+        #   end
+        def inertia_share(hash = nil, **props, &block)
+          wrapped = block ? SharedProps.wrap(block) : nil
+
+          if hash.nil?
+            super(**props, &wrapped)
+          else
+            super(hash, **props, &wrapped)
+          end
+        end
+      end
+
+      # Instance-level `inertia_share`, for use inside `before_action` callbacks.
+      def inertia_share(**props, &block)
+        super(**props, &(block ? SharedProps.wrap(block) : nil))
+      end
+
       private
 
       def default_render

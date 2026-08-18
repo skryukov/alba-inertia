@@ -4,6 +4,7 @@ require_relative "inertia/version"
 require_relative "inertia/configuration"
 require_relative "inertia/controller"
 require_relative "inertia/prop_builder"
+require_relative "inertia/shared_props"
 require_relative "inertia/resource"
 
 module Alba
