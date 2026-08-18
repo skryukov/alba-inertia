@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning].
 
 ## [Unreleased]
 
+### Added
+
+- Support for assigning instance variables inside `inertia_share` blocks. ([@mondo1492])
+
 ## [0.1.4] - 2026-04-21
 
 ### Added
@@ -50,6 +54,7 @@ and this project adheres to [Semantic Versioning].
 - Initial release ([@skryukov])
 
 [@bknoles]: https://github.com/bknoles
+[@mondo1492]: https://github.com/mondo1492
 [@nickpellant]: https://github.com/nickpellant
 [@skryukov]: https://github.com/skryukov
 

@@ -9,6 +9,7 @@ Seamless integration between [Alba](https://github.com/okuramasafumi/alba) seria
 - Support for all Inertia prop types: optional, deferred, and merge props
 - Lazy evaluation for efficient data loading on partial reloads
 - Auto-detection of resource classes based on controller/action naming
+- Instance variables as shared props in `inertia_share` blocks
 
 <br/>
 
@@ -127,6 +128,53 @@ class CoursesController < InertiaController
   end
 end
 ```
+
+### Shared Data
+
+Inertia Rails' [shared data](https://inertia-rails.dev/guide/shared-data) blocks have to return a hash. Alba::Inertia lets them assign instance variables instead, matching the way controller actions pass data to resources:
+
+```ruby
+class EventsController < InertiaController
+  # Static sharing: evaluated immediately
+  inertia_share app_name: Rails.configuration.app_name
+
+  # Dynamic sharing: evaluated at render time
+  inertia_share do
+    if user_signed_in?
+      @user = current_user.as_json(only: [:id, :name, :email])
+      @notifications = current_user.unread_notifications_count
+    end
+  end
+
+  # Lazily evaluated values
+  inertia_share do
+    @total_users = -> { User.count }
+  end
+end
+```
+
+Every instance variable assigned in the block becomes a shared prop with the `@` stripped (`@user` => `user`). Values are passed to Inertia untouched, so lambdas and prop helpers (`InertiaRails.defer`, `InertiaRails.optional`, ...) keep working.
+
+The same applies to the instance-level `inertia_share`, useful in `before_action` callbacks:
+
+```ruby
+class EventsController < InertiaController
+  before_action :share_event
+
+  private
+
+  def share_event
+    inertia_share { @event = Event.find(params[:id]).as_json }
+  end
+end
+```
+
+A few things to keep in mind:
+
+- The block is evaluated by a collector standing in for the controller: method calls (`current_user`, `params`, ...) are delegated to it, but assignments stay inside the block, so they don't end up in `view_assigns` (and thus in your resource's locals).
+- Instance variables set before the block runs (in a `before_action`, for example) can be read inside it, and only become props if the block assigns them a new value.
+- Blocks returning a hash keep working as before. A block that assigns instance variables ignores its return value, since `@user = ...` as the last expression would otherwise return the assigned value as the block's result.
+- Instance variables starting with an underscore (`@_internal`) are never shared.
 
 ### Serialization Modes
 
