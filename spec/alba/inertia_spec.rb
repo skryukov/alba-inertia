@@ -38,11 +38,85 @@ RSpec.describe Alba::Inertia::Resource do
   end
 
   describe "#to_inertia" do
-    it "returns empty hash for nil object" do
-      resource = test_resource_class.new(nil)
-      result = resource.to_inertia
+    context "with a nil object" do
+      it "builds props from blocks that ignore the object" do
+        test_resource_class.attribute(:title) { "Reset your password" }
 
-      expect(result).to eq({})
+        result = test_resource_class.new(nil).to_inertia
+
+        expect(result.keys).to eq(["title"])
+        expect(result["title"]).to be_a(Proc)
+        expect(result["title"].call).to eq("Reset your password")
+      end
+
+      it "matches serializable_hash" do
+        test_resource_class.attribute(:title) { "Reset your password" }
+        test_resource_class.attribute(:min_length) { |_obj| 12 }
+        test_resource_class.attribute(:object_present) { |obj| !obj.nil? }
+
+        resource = test_resource_class.new(nil)
+
+        expect(resource.to_inertia.transform_values(&:call)).to eq(resource.serializable_hash)
+      end
+
+      context "when lazy_by_default is false" do
+        around do |example|
+          Alba::Inertia.config.lazy_by_default = false
+          example.run
+        ensure
+          Alba::Inertia.reset_configuration!
+        end
+
+        it "evaluates props eagerly" do
+          test_resource_class.attribute(:title) { "Reset your password" }
+
+          result = test_resource_class.new(nil).to_inertia
+
+          expect(result).to eq("title" => "Reset your password")
+        end
+      end
+
+      it "wraps props with inertia metadata" do
+        test_resource_class.attribute(:title, inertia: :always) { "Reset your password" }
+
+        result = test_resource_class.new(nil).to_inertia
+
+        expect(result["title"]).to be_a(InertiaRails::AlwaysProp)
+      end
+
+      it "resolves resource methods" do
+        test_resource_class.attributes :title
+        test_resource_class.class_eval do
+          def title(_obj) = "Reset your password"
+        end
+
+        result = test_resource_class.new(nil).to_inertia
+
+        expect(result["title"].call).to eq("Reset your password")
+      end
+
+      it "passes params to blocks" do
+        test_resource_class.attribute(:locale) { params[:locale] }
+
+        result = test_resource_class.new(nil, params: {locale: "en"}).to_inertia
+
+        expect(result["locale"].call).to eq("en")
+      end
+
+      it "raises like serializable_hash when an attribute reads from the object" do
+        test_resource_class.attributes :name
+
+        resource = test_resource_class.new(nil)
+        result = resource.to_inertia
+
+        expect(result).to have_key("name")
+        expect { resource.serializable_hash }.to raise_error(NoMethodError, /undefined method .name./)
+        expect { result["name"].call }.to raise_error(NoMethodError, /undefined method .name./)
+      end
+
+      it "returns an empty hash when the resource has no attributes" do
+        expect(test_resource_class.new(nil).to_inertia).to eq({})
+      end
     end
 
     it "returns lazy procs for attributes without metadata" do

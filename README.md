@@ -140,6 +140,13 @@ resource.to_inertia
 # => { "courses" => <InertiaRails::OptionalProp>, "stats" => <Proc> }
 ```
 
+Pages without a record (sign-in, password reset) can pass `nil` and send only static props:
+
+```ruby
+PasswordResetPage.new(nil).to_inertia
+# => { "title" => <Proc> }
+```
+
 #### `.as_json` - For standard JSON
 
 Returns normal data (Typelizer, API endpoints):

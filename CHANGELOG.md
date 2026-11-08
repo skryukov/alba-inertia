@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning].
 
 ## [Unreleased]
 
+### Fixed
+
+- `to_inertia` builds props for a `nil` object instead of returning `{}`, matching `serializable_hash`. Attributes that read from a `nil` object now raise when evaluated instead of silently dropping every prop. ([@schodevio])
+
 ## [0.1.4] - 2026-04-21
 
 ### Added
@@ -51,6 +55,7 @@ and this project adheres to [Semantic Versioning].
 
 [@bknoles]: https://github.com/bknoles
 [@nickpellant]: https://github.com/nickpellant
+[@schodevio]: https://github.com/schodevio
 [@skryukov]: https://github.com/skryukov
 
 [Unreleased]: https://github.com/skryukov/alba-inertia/compare/v0.1.4...HEAD

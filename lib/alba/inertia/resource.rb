@@ -107,8 +107,6 @@ module Alba
       end
 
       def to_inertia
-        return {} if object.nil?
-
         metadata = self.class.inertia_metadata
         result = {}
 
